@@ -1,0 +1,36 @@
+{
+  "productos": [
+    {
+      "nombre": "ARROZ EXTRA",
+      "precio": "30",
+      "categoria": "Alimentos",
+      "imagen": "https://res.cloudinary.com/dgyup5nxp/image/upload/v1764368093/bodega-el-milagro/tjrldylxixlibdhq3z5k.webp",
+      "id": "1764368093873",
+      "estado": "Disponible"
+    },
+    {
+      "nombre": "DETERGENTE",
+      "precio": "12",
+      "categoria": "Hogar",
+      "imagen": "https://res.cloudinary.com/dgyup5nxp/image/upload/v1764373414/bodega-el-milagro/wawyvnrfcaxzq3wc9wnq.jpg",
+      "estado": "Agotado",
+      "id": "1764373414324"
+    },
+    {
+      "nombre": "FIDEO ALIANZA",
+      "precio": "8",
+      "categoria": "Alimentos",
+      "imagen": "https://res.cloudinary.com/dgyup5nxp/image/upload/v1764386252/bodega-el-milagro/snokvpiynvqdv8mzemt0.jpg",
+      "estado": "Disponible",
+      "id": "1764386250337"
+    },
+    {
+      "nombre": "OSO DE PELUCHE",
+      "precio": "50",
+      "categoria": "Regalos de toda ocacion",
+      "imagen": "https://res.cloudinary.com/dgyup5nxp/image/upload/v1764386321/bodega-el-milagro/gvd4i3slwquvynqaftlj.jpg",
+      "estado": "Disponible",
+      "id": "1764386318721"
+    }
+  ]
+}
