@@ -123,30 +123,31 @@ app.put("/productos/:id", authMiddleware, (req, res) => {
   let productos = leerProductos();
   const id = req.params.id;
 
-  const i = productos.findIndex(p => p.id === id);
-  if (i === -1) return res.status(404).json({ error: "No encontrado" });
+  const index = productos.findIndex(p => p.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: "Producto no encontrado" });
+  }
 
-  const actual = productos[i];
+  const productoAnterior = productos[index];
 
-  productos[i] = {
-    ...actual,
+  // ⭐ ACTUALIZACIÓN CORRECTA
+  productos[index] = {
+    ...productoAnterior,
     nombre: req.body.nombre,
     precio: req.body.precio,
     categoria: req.body.categoria,
     imagen: req.body.imagen,
     estado: req.body.estado,
-    descripcion: req.body.descripcion ?? actual.descripcion,
+    descripcion: req.body.descripcion,
 
-    // ⭐⭐ CORREGIDO: mantener imágenes extra existentes + eliminadas + nuevas
-    imagenes_extra: Array.isArray(req.body.imagenes_extra)
-      ? req.body.imagenes_extra
-      : actual.imagenes_extra || []
+    // ⭐⭐ ESTA ES LA PARTE IMPORTANTE:
+    imagenes_extra: req.body.imagenes_extra || []
   };
 
   guardarProductos(productos);
-
-  res.json({ mensaje: "Producto modificado", producto: productos[i] });
+  res.json({ mensaje: "Producto actualizado correctamente", producto: productos[index] });
 });
+
 
 // =======================
 // DELETE productos
