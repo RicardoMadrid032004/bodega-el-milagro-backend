@@ -68,15 +68,39 @@ app.get("/productos", (req, res) => {
   res.json(data.productos);
 });
 
+// GET producto por ID
+app.get("/productos/:id", (req, res) => {
+  const data = JSON.parse(fs.readFileSync(RUTA_JSON));
+  const producto = data.productos.find(p => p.id === req.params.id);
+
+  if (!producto) {
+    return res.status(404).json({ error: "Producto no encontrado" });
+  }
+
+  res.json(producto);
+});
+
+
 // POST productos
 app.post("/productos", authMiddleware, (req, res) => {
   const data = JSON.parse(fs.readFileSync(RUTA_JSON));
-  const nuevo = req.body;
 
-  nuevo.id = Date.now().toString();
+  const { nombre, precio, categoria, imagen, estado, descripcion, imagenes_extra } = req.body;
+
+  const nuevo = {
+    nombre,
+    precio,
+    categoria,
+    imagen,
+    estado,
+    descripcion: descripcion || "",
+    imagenes_extra: imagenes_extra || [],
+    id: Date.now().toString()
+  };
+
   data.productos.push(nuevo);
-
   fs.writeFileSync(RUTA_JSON, JSON.stringify(data, null, 2));
+
   res.json({ mensaje: "Producto agregado", producto: nuevo });
 });
 
@@ -88,7 +112,19 @@ app.put("/productos/:id", authMiddleware, (req, res) => {
   const i = data.productos.findIndex(p => p.id === id);
   if (i === -1) return res.status(404).json({ error: "No encontrado" });
 
-  data.productos[i] = { ...data.productos[i], ...req.body };
+  const productoActual = data.productos[i];
+
+  data.productos[i] = {
+    ...productoActual,
+    nombre: req.body.nombre,
+    precio: req.body.precio,
+    categoria: req.body.categoria,
+    imagen: req.body.imagen,
+    estado: req.body.estado,
+    descripcion: req.body.descripcion ?? productoActual.descripcion,
+    imagenes_extra: req.body.imagenes_extra ?? productoActual.imagenes_extra
+  };
+
   fs.writeFileSync(RUTA_JSON, JSON.stringify(data, null, 2));
 
   res.json({ mensaje: "Producto modificado" });
