@@ -62,16 +62,29 @@ function authMiddleware(req, res, next) {
   next();
 }
 
-// GET productos
-app.get("/productos", (req, res) => {
+// =======================
+// HELPERS JSON
+// =======================
+function leerProductos() {
   const data = JSON.parse(fs.readFileSync(RUTA_JSON));
-  res.json(data.productos);
+  return data.productos || [];
+}
+
+function guardarProductos(lista) {
+  fs.writeFileSync(RUTA_JSON, JSON.stringify({ productos: lista }, null, 2));
+}
+
+// =======================
+// GET productos
+// =======================
+app.get("/productos", (req, res) => {
+  res.json(leerProductos());
 });
 
 // GET producto por ID
 app.get("/productos/:id", (req, res) => {
-  const data = JSON.parse(fs.readFileSync(RUTA_JSON));
-  const producto = data.productos.find(p => p.id === req.params.id);
+  const productos = leerProductos();
+  const producto = productos.find(p => p.id === req.params.id);
 
   if (!producto) {
     return res.status(404).json({ error: "Producto no encontrado" });
@@ -80,68 +93,76 @@ app.get("/productos/:id", (req, res) => {
   res.json(producto);
 });
 
-
+// =======================
 // POST productos
+// =======================
 app.post("/productos", authMiddleware, (req, res) => {
-  const data = JSON.parse(fs.readFileSync(RUTA_JSON));
-
-  const { nombre, precio, categoria, imagen, estado, descripcion, imagenes_extra } = req.body;
+  const productos = leerProductos();
 
   const nuevo = {
-    nombre,
-    precio,
-    categoria,
-    imagen,
-    estado,
-    descripcion: descripcion || "",
-    imagenes_extra: imagenes_extra || [],
-    id: Date.now().toString()
-  };
-
-  data.productos.push(nuevo);
-  fs.writeFileSync(RUTA_JSON, JSON.stringify(data, null, 2));
-
-  res.json({ mensaje: "Producto agregado", producto: nuevo });
-});
-
-// PUT productos
-app.put("/productos/:id", authMiddleware, (req, res) => {
-  const data = JSON.parse(fs.readFileSync(RUTA_JSON));
-  const id = req.params.id;
-
-  const i = data.productos.findIndex(p => p.id === id);
-  if (i === -1) return res.status(404).json({ error: "No encontrado" });
-
-  const productoActual = data.productos[i];
-
-  data.productos[i] = {
-    ...productoActual,
+    id: Date.now().toString(),
     nombre: req.body.nombre,
     precio: req.body.precio,
     categoria: req.body.categoria,
     imagen: req.body.imagen,
     estado: req.body.estado,
-    descripcion: req.body.descripcion ?? productoActual.descripcion,
-    imagenes_extra: req.body.imagenes_extra ?? productoActual.imagenes_extra
+    descripcion: req.body.descripcion || "",
+    imagenes_extra: req.body.imagenes_extra || []
   };
 
-  fs.writeFileSync(RUTA_JSON, JSON.stringify(data, null, 2));
+  productos.push(nuevo);
+  guardarProductos(productos);
 
-  res.json({ mensaje: "Producto modificado" });
+  res.json({ mensaje: "Producto agregado", producto: nuevo });
 });
 
-// DELETE productos
-app.delete("/productos/:id", authMiddleware, (req, res) => {
-  const data = JSON.parse(fs.readFileSync(RUTA_JSON));
+// =======================
+// PUT productos
+// =======================
+app.put("/productos/:id", authMiddleware, (req, res) => {
+  let productos = leerProductos();
   const id = req.params.id;
 
-  data.productos = data.productos.filter(p => p.id !== id);
-  fs.writeFileSync(RUTA_JSON, JSON.stringify(data, null, 2));
+  const i = productos.findIndex(p => p.id === id);
+  if (i === -1) return res.status(404).json({ error: "No encontrado" });
+
+  const actual = productos[i];
+
+  productos[i] = {
+    ...actual,
+    nombre: req.body.nombre,
+    precio: req.body.precio,
+    categoria: req.body.categoria,
+    imagen: req.body.imagen,
+    estado: req.body.estado,
+    descripcion: req.body.descripcion ?? actual.descripcion,
+
+    // ⭐⭐ CORREGIDO: mantener imágenes extra existentes + eliminadas + nuevas
+    imagenes_extra: Array.isArray(req.body.imagenes_extra)
+      ? req.body.imagenes_extra
+      : actual.imagenes_extra || []
+  };
+
+  guardarProductos(productos);
+
+  res.json({ mensaje: "Producto modificado", producto: productos[i] });
+});
+
+// =======================
+// DELETE productos
+// =======================
+app.delete("/productos/:id", authMiddleware, (req, res) => {
+  let productos = leerProductos();
+
+  productos = productos.filter(p => p.id !== req.params.id);
+  guardarProductos(productos);
 
   res.json({ mensaje: "Producto eliminado" });
 });
 
+// =======================
 // UPLOAD imagen
+// =======================
 app.post("/upload", upload.single("imagen"), authMiddleware, async (req, res) => {
   try {
     if (!req.file) {
@@ -165,7 +186,9 @@ app.post("/upload", upload.single("imagen"), authMiddleware, async (req, res) =>
   }
 });
 
+// =======================
 // RUN SERVER
+// =======================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Servidor Bodega El Milagro funcionando en el puerto " + PORT);
