@@ -7,7 +7,7 @@ import multer from "multer";
 import cloudinary from "cloudinary";
 import crypto from "crypto";
 
-dotenv.config();z
+dotenv.config();
 
 // CLOUDINARY CONFIG
 cloudinary.v2.config({
